@@ -1,138 +1,58 @@
-// global variables
-var timeElapsedPrecision = '0';
-var bufferTime = 1000; // in miliseconds
-const MIDNIGHT = new Date (Date.now()); // set midnight time
-MIDNIGHT.setHours(0, 0, 0);
-const ARRAYMAX = 4294967296; // max array size, for history.search
 
-function setTimeAgoString(period) {
-	var mili = Math.floor(period%1000);
-	var sec = Math.floor(period/1000)%60;
-	var min = Math.floor(period/(1000*60))%60;
-	var hr = Math.floor(period/(1000*60*60));
-	var str = '';
-
-	browser.storage.local.get('unit', function(data) {
-		timeElapsedPrecision = data.unit;
-
-		/* switch statement
-		* falls through so that the time from the least precise on is calculated
-		* eg precision to seconds starts at case 1, so sec, min, hr all calculated
-		* rounds up if necessary
-		*/
-		switch (timeElapsedPrecision) {
-			case '0':
-			if (mili==1) {
-				str+=mili+' millisecond ';
-			} else if (mili>1) {
-				str+=mili+' milliseconds ';
-			}
-
-			case '1':
-			// rounding
-			if (timeElapsedPrecision=='1' && mili>=500) sec+=1;
-			if (sec==1) {
-				str = sec+' second ' + str;
-			} else if (sec>1) {
-				str = sec+' seconds ' + str;
-			}
-
-			case '2':
-			// rounding
-			if (timeElapsedPrecision=='2' && sec>=30) min+=1;
-			if (min==1) {
-				str = min+' minute ' + str;
-			} else if (min>1) {
-				str = min+' minutes ' + str;
-			}
-
-			case '3':
-			// rounding
-			if (timeElapsedPrecision=='3' && min>=30) hr+=1;
-			if (hr==1) {
-				str = hr+' hour ' + str;
-			} else if (hr>1) {
-				str = hr+' hours ' + str;
-			}
-		}
-
-		if (str.length>0) {
-			str += 'ago';
-			// add line break before time-ago
-			const testElement = document.getElementById('last-visit');
-			testElement.appendChild(document.createElement('br'));
-		} else {
-			str = 'just now';
-		}
-
-		document.getElementById('time-ago').textContent = str;
-
-	});
+function sendPagesVisited(pagesVisited) {
+	alert("json\n" + JSON.stringify(pagesVisited));
 }
 
 
-function setVisits(historyItems) {
+// start button: set start time and first page when clicked
+document.getElementById('start-button').onclick = function() {
+	chrome.tabs.query({lastFocusedWindow: true, active: true}, function(result) {
+		var pagesVisited = []; // each entry will be [the page url, page title, time spent on page]
 
-	console.log('there are '+historyItems.length+' history items');
+		// initial data for the starting page, time spent is time accessed
+		var pageEntry = [result[0].url, result[0].title, Date.now()];
+		pagesVisited.push(pageEntry);
 
-	if (historyItems.length>1) {
-		const thisVisit = new Date(historyItems[0].lastVisitTime);
-		var lastVisit = new Date(historyItems[1].lastVisitTime);
+		alert("first title which is " + result[0].title);
+		alert("first time which is " + Date.now());
+		alert("end of start\n" + JSON.stringify(pagesVisited));
 
-		// to handle pages that redirect/reload (e.g. wikipedia)
-		var count = 2;
-		while ((thisVisit-lastVisit) < bufferTime && historyItems.length>count) {
-			lastVisit = new Date(historyItems[count].lastVisitTime);
-			count++;
-		}
+		chrome.storage.local.set({pagesVisited: JSON.stringify(pagesVisited)}, function() {
+			alert('start stroage is set to ' + JSON.stringify(pagesVisited));
+		  });
+	});	
+};
 
-		// updating display text
-		document.getElementById('visits').textContent = historyItems.length;
-		document.getElementById('last-visit').textContent = lastVisit.toLocaleTimeString();
-		var timeElapsed = Date.now()-lastVisit;
-		setTimeAgoString(timeElapsed); // sets time-ago
+// end button: set end time and last page when clicked
+document.getElementById('end-button').onclick = function() {
+	chrome.tabs.query({lastFocusedWindow: true, active: true}, function(result) {
+		chrome.storage.local.get(['pagesVisited'], function(pagesVisited) {
+			alert('end stoarge currently is ' + pagesVisited.key);
+			alert('array is ' + (typeof pagesVisited));
+			alert("start of end\n" + JSON.parse(pagesVisited));
+			alert('array legnth is ' + JSON.parse(pagesVisited).length);
+			
 
-	} else {
-		document.getElementById("stats1").textContent = "This is the first visit today"
-		document.getElementById('visits').style.fontWeight = 'normal';
-		document.getElementById('visits').textContent = 'No';
-	}
-}
+			// update time spent on the last (i.e. this) page
+			var lastPageEntry = pagesVisited.pop();
+			// var lastPageTime = lastPageEntry[2];
+			lastPageEntry[2] = (Date.now()-lastPageEntry[2]);
+			pagesVisited.push(lastPageEntry); // add lastPageEntry back to pagesVisited array
 
-function getHistory(domain) {
-	var searched = browser.history.search({
-		text: domain,
-		startTime: MIDNIGHT,
-		maxResults: ARRAYMAX});
-	searched.then(setVisits);
+			alert("end of end\n" + JSON.stringify(pagesVisited));
 
-}
+			sendPagesVisited(pagesVisited);
 
-function setDomain(domain) {
-	document.getElementById('domain').textContent = domain;
-}
-
-// gets the domain name of the url
-function getDomain(tabs) {
-	const tabURL = new URL(tabs[0].url);
-	var domain = tabURL.hostname;
-	setDomain(domain);
-	getHistory(domain);
-}
+		  });
+	});	
+};
 
 // code starts here
 
-// get settings from storage
-browser.storage.local.get('unit', function(data) {
-	timeElapsedPrecision = data.unit;
-	bufferTime = data.bufferTime;
+// get current tab info and set the popup text
+// (note that activeTabs is a one element array)
+chrome.tabs.query({lastFocusedWindow: true, active: true}, function(result) {
+	const tabURL = new URL(result[0].url);
+	var domain = tabURL.hostname;
+	document.getElementById('domain').textContent = domain;
 });
-
-
-// get current tab info (and pass it along)
-// note that activeTabs is a one element array
-let activeTabsPromise = browser.tabs.query({currentWindow: true, active: true});
-activeTabsPromise.then(getDomain);
-
-
-

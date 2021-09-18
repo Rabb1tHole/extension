@@ -3,7 +3,7 @@ var bufferTime = 1000;
 var form = document.querySelector("form");
 
 function saveOptions(e) {
-	browser.storage.local.set({
+	chrome.storage.local.set({
 		unit: this.unit,
 		bufferTime: this.bufferTime
 	});
@@ -11,7 +11,7 @@ function saveOptions(e) {
 }
 
 function restoreOptions() {
-	var getItem = browser.storage.local.get('unit');
+	var getItem = chrome.storage.local.get('unit');
 	getItem.then((res)=> {
 		document.querySelector(res).setChecked();
 	});

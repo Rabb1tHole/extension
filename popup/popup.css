@@ -20,6 +20,14 @@ div {
 	text-decoration: none;
 }
 
+.button {
+	font-weight: normal;
+	margin-left: 0.5em;
+	margin-right: 0.5em;
+	text-decoration: none;
+	margin-bottom: 1em;
+}
+
 #title {
 	font-weight: bold;
 	margin-left: 0.5em;
