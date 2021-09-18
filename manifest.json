@@ -2,7 +2,7 @@
 
 	"manifest_version": 2,
 	"version": "0.1",
-	"name": "Rabb1tHole",
+	"name": "rabb1thole",
 	"description": "How'd you get down here?",
 	"icons": { 
 		"48": "icons/icon.svg",
@@ -12,7 +12,6 @@
 	"permissions": [
 		"tabs",
 		"activeTab",
-		"history",
 		"storage"],
 
 	"background": {

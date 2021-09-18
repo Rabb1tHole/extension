@@ -3,7 +3,6 @@ function sendPagesVisited(pagesVisited) {
 	alert("json\n" + JSON.stringify(pagesVisited));
 }
 
-
 // start button: set start time and first page when clicked
 document.getElementById('start-button').onclick = function() {
 	chrome.tabs.query({lastFocusedWindow: true, active: true}, function(result) {
@@ -17,21 +16,24 @@ document.getElementById('start-button').onclick = function() {
 		alert("first time which is " + Date.now());
 		alert("end of start\n" + JSON.stringify(pagesVisited));
 
-		chrome.storage.local.set({pagesVisited: JSON.stringify(pagesVisited)}, function() {
-			alert('start stroage is set to ' + JSON.stringify(pagesVisited));
+		chrome.storage.local.set({'storedArray': pagesVisited}, function() {
+			alert('start storage is set to ' + JSON.stringify(pagesVisited));
 		  });
+
+		chrome.storage.local.get(['storedArray'], function(result) {
+		alert('start storage check ' + JSON.stringify(result.storedArray));
+		});
 	});	
 };
 
 // end button: set end time and last page when clicked
 document.getElementById('end-button').onclick = function() {
 	chrome.tabs.query({lastFocusedWindow: true, active: true}, function(result) {
-		chrome.storage.local.get(['pagesVisited'], function(pagesVisited) {
-			alert('end stoarge currently is ' + pagesVisited.key);
-			alert('array is ' + (typeof pagesVisited));
-			alert("start of end\n" + JSON.parse(pagesVisited));
-			alert('array legnth is ' + JSON.parse(pagesVisited).length);
-			
+		chrome.storage.local.get(['storedArray'], function(result) {
+			var pagesVisited = result.storedArray;
+
+			alert('end stoarge currently is ' + JSON.stringify(pagesVisited));
+			alert('array legnth is ' + pagesVisited.length);
 
 			// update time spent on the last (i.e. this) page
 			var lastPageEntry = pagesVisited.pop();
