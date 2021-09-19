@@ -1,6 +1,85 @@
 
+// get username, password
+document.getElementById('login-button').onclick = function() {
+	var username = document.getElementById('username').value;
+	var password = document.getElementById('password').value;
+
+	chrome.storage.local.set({'username': username});
+
+	var myHeaders = new Headers();
+	myHeaders.append("Content-Type", "application/json");
+
+	var raw = JSON.stringify({"username":username,"password":password});
+
+	var requestOptions = {
+	method: 'POST',
+	headers: myHeaders,
+	body: raw,
+	redirect: 'follow'
+	};
+
+	fetch("http://147.182.156.48:8080/auth", requestOptions)
+	.then(response => response.json())
+	.then(result => {
+
+		chrome.storage.local.set({'noAuth': username});
+
+		alert(JSON.stringify(result));
+
+		var requestOptions2 = {
+			method: 'POST',
+			headers: myHeaders,
+			body: JSON.stringify({'username':username}),
+			redirect: 'follow'
+			};
+	
+		fetch("http://147.182.156.48:8080/", requestOptions2)
+		.then(response => response.text())
+		.then(result => alert(result))
+		.catch(error => alert('Error: ' + error));
+	})
+	.catch(error => alert('Error: ' + error));
+
+	
+
+};
+
+
 function sendPagesVisited(pagesVisited) {
-	// alert("json\n" + JSON.stringify(pagesVisited));
+	alert("json\n" + JSON.stringify(pagesVisited));
+
+	var myHeaders = new Headers();
+	myHeaders.append("Content-Type", "application/json");
+
+	chrome.storage.local.get(['noAuth'], function(result) {
+		const username = result.noAuth;
+
+		alert("username: " + username);
+
+		var raw = JSON.stringify({"username":username,"nodeList":pagesVisited});
+
+		var requestOptions = {
+		method: 'POST',
+		headers: myHeaders,
+		body: raw,
+		redirect: 'follow'
+		};
+
+		fetch("http://147.182.156.48:8080/makeGraph", requestOptions)
+		.then(response => response.text())
+		.then(result => {
+			alert(JSON.stringify(result));
+		})
+		.catch(error => alert('Error: ' + error));
+
+
+		chrome.storage.local.remove(["storedArray"], function(){
+			var error = chrome.runtime.lastError;
+			if (error) console.error(error);
+		})
+
+	  });
+
 }
 
 // start button: set start time and first page when clicked
@@ -12,14 +91,13 @@ document.getElementById('start-button').onclick = function() {
 		var pageEntry = [result[0].url, result[0].title, Date.now()];
 		pagesVisited.push(pageEntry);
 
+		chrome.storage.local.set({'storedArray': pagesVisited});
+
 		/* DEBUGGING
 		alert("first title which is " + result[0].title);
 		alert("first time which is " + Date.now());
 		alert("end of start\n" + JSON.stringify(pagesVisited));
 
-		chrome.storage.local.set({'storedArray': pagesVisited}, function() {
-			alert('start storage is set to ' + JSON.stringify(pagesVisited));
-		  });
 
 		chrome.storage.local.get(['storedArray'], function(result) {
 		alert('start storage check ' + JSON.stringify(result.storedArray));
@@ -60,3 +138,5 @@ chrome.tabs.query({lastFocusedWindow: true, active: true}, function(result) {
 	var domain = tabURL.hostname;
 	document.getElementById('domain').textContent = domain;
 });
+
+
