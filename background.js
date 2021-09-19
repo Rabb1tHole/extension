@@ -16,7 +16,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 			chrome.storage.local.get(['storedArray'], function(result) {
 				var pagesVisited = result.storedArray;
 
-				alert('bkg storage check ' + JSON.stringify(pagesVisited));
+				// alert('bkg storage check ' + JSON.stringify(pagesVisited));
 
 				if (!(pagesVisited === 'undefined')) {
 					// update time spent on last page

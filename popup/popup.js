@@ -1,7 +1,7 @@
 
 // send pagesVisited
 function sendPagesVisited(pagesVisited) {
-	alert("json\n" + JSON.stringify(pagesVisited));
+	// alert("json\n" + JSON.stringify(pagesVisited));
 
 	let stuff = document.getElementById("stuff")
 		pagesVisited.forEach(page => {
