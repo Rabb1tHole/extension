@@ -1,6 +1,6 @@
 
 function sendPagesVisited(pagesVisited) {
-	alert("json\n" + JSON.stringify(pagesVisited));
+	// alert("json\n" + JSON.stringify(pagesVisited));
 }
 
 // start button: set start time and first page when clicked
@@ -12,6 +12,7 @@ document.getElementById('start-button').onclick = function() {
 		var pageEntry = [result[0].url, result[0].title, Date.now()];
 		pagesVisited.push(pageEntry);
 
+		/* DEBUGGING
 		alert("first title which is " + result[0].title);
 		alert("first time which is " + Date.now());
 		alert("end of start\n" + JSON.stringify(pagesVisited));
@@ -23,6 +24,7 @@ document.getElementById('start-button').onclick = function() {
 		chrome.storage.local.get(['storedArray'], function(result) {
 		alert('start storage check ' + JSON.stringify(result.storedArray));
 		});
+		*/
 	});	
 };
 
@@ -32,8 +34,8 @@ document.getElementById('end-button').onclick = function() {
 		chrome.storage.local.get(['storedArray'], function(result) {
 			var pagesVisited = result.storedArray;
 
-			alert('end stoarge currently is ' + JSON.stringify(pagesVisited));
-			alert('array legnth is ' + pagesVisited.length);
+			// alert('end stoarge currently is ' + JSON.stringify(pagesVisited));
+			// alert('array legnth is ' + pagesVisited.length);
 
 			// update time spent on the last (i.e. this) page
 			var lastPageEntry = pagesVisited.pop();
@@ -41,7 +43,7 @@ document.getElementById('end-button').onclick = function() {
 			lastPageEntry[2] = (Date.now()-lastPageEntry[2]);
 			pagesVisited.push(lastPageEntry); // add lastPageEntry back to pagesVisited array
 
-			alert("end of end\n" + JSON.stringify(pagesVisited));
+			// alert("end of end\n" + JSON.stringify(pagesVisited));
 
 			sendPagesVisited(pagesVisited);
 
